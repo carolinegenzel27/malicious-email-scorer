@@ -12,6 +12,7 @@ score, a verdict, and a clear explanation of the reasoning behind it.
 |---|---|
 | `addon/` | Gmail Add-on (Google Apps Script + CardService) |
 | `backend/` | Analysis backend service (Python + FastAPI) |
+| `tools/demo-emails/` | Apps Script that inserts safe sample emails into your own inbox for demos |
 
 ## Running the backend locally
 
