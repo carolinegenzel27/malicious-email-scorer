@@ -39,6 +39,8 @@ IMPERSONATION = _any(
     "sender.brand_in_domain", "sender.punycode_domain",
 )
 LOOKALIKE_DOMAIN = _any("sender.lookalike_domain", "sender.brand_in_domain", "sender.punycode_domain")
+# Either way, the sender's own domain vouched for the message.
+AUTHENTICATED = _any("auth.dmarc_pass", "auth.spf_dkim_pass")
 
 PATTERNS: tuple[Pattern, ...] = (
     Pattern(
@@ -51,7 +53,7 @@ PATTERNS: tuple[Pattern, ...] = (
     Pattern(
         id="pattern.attacker_owned_lookalike",
         name="Look-alike domain owned by the attacker",
-        requires=(LOOKALIKE_DOMAIN, _any("auth.dmarc_pass")),
+        requires=(LOOKALIKE_DOMAIN, AUTHENTICATED),
         explanation="Authentication passed only because the sender owns this look-alike "
                     "domain. Passing checks here means the forgery is well prepared, not safe.",
     ),

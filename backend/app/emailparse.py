@@ -11,7 +11,9 @@ _MULTI_LABEL_SUFFIXES = {
     "co.uk", "org.uk", "ac.uk", "gov.uk",
     "co.il", "org.il", "ac.il", "gov.il", "net.il", "muni.il",
     "com.au", "net.au", "org.au",
-    "co.jp", "co.in", "co.nz", "co.za", "com.br", "com.mx", "com.tr",
+    "co.jp", "ne.jp", "or.jp", "ac.jp", "go.jp",
+    "co.in", "co.nz", "co.za", "co.kr", "com.br", "com.mx", "com.tr",
+    "com.cn", "com.hk", "com.sg", "com.tw", "com.ar",
 }
 
 

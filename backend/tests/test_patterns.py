@@ -77,6 +77,26 @@ def test_attacker_owned_lookalike_with_passing_auth(monkeypatch):
     assert "pattern.attacker_owned_lookalike" in {x.id for x in result.findings}
 
 
+def test_attacker_owned_lookalike_without_dmarc_record(monkeypatch):
+    registered_days_ago(monkeypatch, 400)
+    result = analyze(EmailAnalysisRequest(
+        sender="Billing <billing@paypal-security-center.com>",
+        authentication_results=["mx.google.com; spf=pass; dkim=pass"],
+    ))
+    assert "pattern.attacker_owned_lookalike" in {x.id for x in result.findings}
+
+
+def test_brand_name_on_free_email_is_never_verified():
+    result = analyze(EmailAnalysisRequest(
+        sender="Microsoft Support <microsoft.help@outlook.com>",
+        authentication_results=[DMARC_PASS.format(domain="outlook.com")],
+    ))
+    found = {x.id for x in result.findings}
+    assert "pattern.verified_brand" not in found
+    assert "sender.brand_impersonation" in found
+    assert result.verdict == Verdict.SUSPICIOUS
+
+
 def test_verified_brand_is_reassuring():
     result = analyze(EmailAnalysisRequest(
         sender="PayPal <service@paypal.com>",

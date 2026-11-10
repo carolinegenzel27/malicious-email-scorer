@@ -14,8 +14,29 @@ def ids_for_age(monkeypatch, days_old: int | None) -> set[str]:
     return {f.id for f in analyze_domain_age(email)}
 
 
+def severity_for_age(monkeypatch, days_old: int) -> str:
+    date = datetime.now(timezone.utc) - timedelta(days=days_old)
+    monkeypatch.setattr(rdap, "registration_date", lambda domain: date)
+    email = EmailAnalysisRequest(sender="Support <help@some-domain.com>")
+    return analyze_domain_age(email)[0].severity.value
+
+
 def test_brand_new_domain_is_high_risk(monkeypatch):
     assert ids_for_age(monkeypatch, 3) == {"sender.new_domain"}
+    assert severity_for_age(monkeypatch, 3) == "high"
+
+
+def test_two_week_old_domain_is_medium_risk(monkeypatch):
+    assert ids_for_age(monkeypatch, 14) == {"sender.new_domain"}
+    assert severity_for_age(monkeypatch, 14) == "medium"
+
+
+def test_free_email_is_not_looked_up(monkeypatch):
+    def fail(domain):
+        raise AssertionError("must not look up free-mail domains")
+
+    monkeypatch.setattr(rdap, "registration_date", fail)
+    assert analyze_domain_age(EmailAnalysisRequest(sender="x@gmail.com")) == []
 
 
 def test_few_months_old_domain_is_low_risk(monkeypatch):
@@ -61,7 +82,10 @@ def test_parse_registration_date():
     assert rdap.parse_registration_date(data).year == 1999
 
 
-@pytest.mark.parametrize("data", [None, [], {"events": "x"}, {"events": [{"eventAction": "registration", "eventDate": "garbage"}]}])
+@pytest.mark.parametrize(
+    "data",
+    [None, [], {"events": "x"}, {"events": [{"eventAction": "registration", "eventDate": "garbage"}]}],
+)
 def test_parse_survives_malformed_responses(data):
     assert rdap.parse_registration_date(data) is None
 

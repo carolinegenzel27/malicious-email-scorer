@@ -34,19 +34,20 @@ function buildResultCard(result) {
       )
     );
 
-  // Warnings first, then the reassuring "info" findings.
+  // Warnings first, then "info" findings. Info is context, not an endorsement
+  // (e.g. a phishing domain can be old or pass DMARC), so the header is neutral.
   const warnings = result.findings.filter(function (f) {
     return f.severity !== 'info';
   });
-  const positives = result.findings.filter(function (f) {
+  const context = result.findings.filter(function (f) {
     return f.severity === 'info';
   });
 
   if (warnings.length) {
     card.addSection(findingsSection('Why we flagged it', warnings));
   }
-  if (positives.length) {
-    card.addSection(findingsSection('What checked out', positives).setCollapsible(true));
+  if (context.length) {
+    card.addSection(findingsSection('Other details', context).setCollapsible(true));
   }
   if (!result.findings.length) {
     card.addSection(

@@ -9,10 +9,12 @@ from datetime import datetime, timezone
 
 from app import rdap
 from app.analyzers.base import finding
+from app.brands import is_free_email
 from app.emailparse import parse_address
 from app.models import EmailAnalysisRequest, Finding, Severity
 
 CATEGORY = "sender"
+VERY_NEW_DOMAIN_DAYS = 7  # typical lifetime of a phishing domain
 NEW_DOMAIN_DAYS = 30
 YOUNG_DOMAIN_DAYS = 180
 
@@ -23,6 +25,11 @@ def analyze_domain_age(email: EmailAnalysisRequest) -> list[Finding]:
         return []  # the sender analyzer already reports a malformed address
 
     domain = sender.org_domain
+    if is_free_email(domain):
+        # gmail.com is decades old, but anyone can open an address there today:
+        # its age would be false reassurance. Also saves a network lookup.
+        return []
+
     registered = rdap.registration_date(domain)
     if registered is None:
         return [
@@ -38,11 +45,13 @@ def analyze_domain_age(email: EmailAnalysisRequest) -> list[Finding]:
 
     age_days = days_since(registered)
     if age_days < NEW_DOMAIN_DAYS:
+        # Same id for both bands (patterns key on it); severity reflects how new.
+        severity = Severity.HIGH if age_days < VERY_NEW_DOMAIN_DAYS else Severity.MEDIUM
         return [
             finding(
                 "sender.new_domain",
                 CATEGORY,
-                Severity.HIGH,
+                severity,
                 "Sender domain was registered very recently",
                 f"{domain} was registered {_ago(age_days)}. Phishing campaigns "
                 "typically use brand-new domains.",
