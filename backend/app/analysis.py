@@ -4,6 +4,7 @@ import logging
 
 from app.analyzers.authentication import analyze_authentication
 from app.analyzers.base import Analyzer, finding
+from app.analyzers.content import analyze_content
 from app.analyzers.domain_age import analyze_domain_age
 from app.analyzers.links import analyze_links
 from app.analyzers.sender import analyze_sender
@@ -18,6 +19,7 @@ ANALYZERS: tuple[Analyzer, ...] = (
     analyze_sender,
     analyze_domain_age,
     analyze_links,
+    analyze_content,
 )
 
 

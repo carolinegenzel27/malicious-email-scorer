@@ -42,7 +42,7 @@ const SAMPLES = [
   },
   {
     name: 'Hebrew bank impersonation',
-    expected: 'Likely malicious (sender and link both imitate the bank)',
+    expected: 'Likely malicious (credential phishing pattern)',
     from: 'בנק הפועלים <service@poalim-secure-update.com>',
     auth: 'spf=softfail smtp.mailfrom=poalim-secure-update.com; dkim=none',
     subject: 'החשבון שלך הוגבל זמנית',
@@ -59,8 +59,8 @@ const SAMPLES = [
     link: { text: 'View invoice', href: 'https://billing-portal.example/invoice/48213' },
   },
   {
-    name: 'CEO fraud (no links)',
-    expected: 'Looks safe today - content analysis is not built yet',
+    name: 'CEO fraud (no links, passes authentication)',
+    expected: 'Likely malicious (CEO / payment fraud pattern)',
     from: 'Dana Levi <dana@acme-industries.com>',
     replyTo: 'dana.levi.ceo@gmail.com',
     auth: 'dkim=pass header.i=@acme-industries.com; spf=pass; dmarc=pass (p=NONE) header.from=acme-industries.com',

@@ -39,6 +39,15 @@ IMPERSONATION = _any(
     "sender.brand_in_domain", "sender.punycode_domain",
 )
 LOOKALIKE_DOMAIN = _any("sender.lookalike_domain", "sender.brand_in_domain", "sender.punycode_domain")
+SUSPICIOUS_LINK = _any(
+    "links.text_mismatch", "links.lookalike_domain", "links.brand_in_domain",
+    "links.ip_address", "links.punycode_domain", "links.shortener",
+)
+# The reply would not reach who the user thinks wrote it.
+DIVERTED_IDENTITY = _any(
+    "sender.reply_to_mismatch", "sender.free_email",
+    "sender.brand_impersonation", "sender.name_contains_other_address",
+)
 # Either way, the sender's own domain vouched for the message.
 AUTHENTICATED = _any("auth.dmarc_pass", "auth.spf_dkim_pass")
 
@@ -49,6 +58,25 @@ PATTERNS: tuple[Pattern, ...] = (
         requires=(IMPERSONATION, _any("sender.new_domain")),
         explanation="The email poses as a well-known brand, but its domain was registered "
                     "only days ago. Real brands do not send from brand-new domains.",
+    ),
+    Pattern(
+        id="pattern.credential_phishing",
+        name="Credential phishing",
+        requires=(_any("content.credential_request"), SUSPICIOUS_LINK),
+        explanation="The email asks you to verify your account or enter login details, and "
+                    "its link leads to a disguised site. This is how passwords are stolen.",
+    ),
+    Pattern(
+        id="pattern.ceo_fraud",
+        name="CEO / payment fraud",
+        requires=(
+            _any("content.money_request"),
+            _any("content.urgency", "content.secrecy"),
+            DIVERTED_IDENTITY,
+        ),
+        explanation="A money request with pressure or secrecy, from an identity that does not "
+                    "hold up (replies go elsewhere, or a free or impersonated address). Verify "
+                    "by phone before paying anything.",
     ),
     Pattern(
         id="pattern.attacker_owned_lookalike",
