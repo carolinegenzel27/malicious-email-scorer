@@ -1,0 +1,20 @@
+# Render Blueprint: infrastructure as code for the backend.
+# Render reads this file and creates the service exactly as described.
+services:
+  - type: web
+    name: malicious-email-scorer
+    runtime: python
+    plan: free
+    region: frankfurt # closest Render region to Israel
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:create_app --factory --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      # Render generates a random secret on first deploy. It never appears in
+      # the repo, in chat, or on a developer machine. Copy it from the Render
+      # dashboard into the add-on's Script Properties.
+      - key: API_KEY
+        generateValue: true
