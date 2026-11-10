@@ -2,8 +2,8 @@
  * Extracts from the opened message only the fields the backend analyzes.
  *
  * Data minimization: every field sent here is used by an analyzer. Nothing
- * else leaves Gmail - no attachments (not even their names or hashes, since
- * there is no attachment analysis), no Return-Path, no recipients.
+ * else leaves Gmail. For attachments that means the file NAME and declared
+ * TYPE only - never contents, sizes or hashes. No Return-Path, no recipients.
  * Limits mirror the backend schema (backend/app/models.py) so a big email is
  * truncated here instead of being rejected there.
  */
@@ -12,6 +12,9 @@ const LIMITS = {
   HEADER: 4000,
   SUBJECT: 1000,
   BODY: 200000,
+  ATTACHMENTS: 30,
+  FILENAME: 255,
+  CONTENT_TYPE: 100,
 };
 
 /**
@@ -28,7 +31,20 @@ function extractEmail(message) {
     ]),
     body_text: truncate(message.getPlainBody(), LIMITS.BODY),
     body_html: truncate(message.getBody(), LIMITS.BODY),
+    attachments: extractAttachmentNames(message),
   };
+}
+
+function extractAttachmentNames(message) {
+  return message
+    .getAttachments({ includeInlineImages: false })
+    .slice(0, LIMITS.ATTACHMENTS)
+    .map(function (attachment) {
+      return {
+        filename: truncate(attachment.getName(), LIMITS.FILENAME),
+        content_type: truncate(attachment.getContentType(), LIMITS.CONTENT_TYPE),
+      };
+    });
 }
 
 function truncate(value, max) {

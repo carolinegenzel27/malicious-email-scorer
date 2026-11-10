@@ -12,6 +12,7 @@ from dataclasses import dataclass
 class Settings:
     api_key: str
     enable_docs: bool
+    version: str = "dev"
 
 
 def load_settings() -> Settings:
@@ -26,4 +27,5 @@ def load_settings() -> Settings:
     return Settings(
         api_key=api_key,
         enable_docs=os.environ.get("ENABLE_DOCS", "false").lower() == "true",
+        version=os.environ.get("RENDER_GIT_COMMIT", "dev")[:7],
     )

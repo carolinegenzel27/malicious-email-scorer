@@ -24,8 +24,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/health")
     def health() -> dict[str, str]:
-        """Unauthenticated liveness check (used by Render and the keep-alive ping)."""
-        return {"status": "ok"}
+        """Unauthenticated liveness check (used by Render and the keep-alive ping).
+
+        Also reports the deployed commit (set by Render), so a deploy can be
+        confirmed before the add-on starts relying on it. The repository is
+        public, so the commit id reveals nothing.
+        """
+        return {"status": "ok", "version": settings.version}
 
     @app.post(
         "/analyze",

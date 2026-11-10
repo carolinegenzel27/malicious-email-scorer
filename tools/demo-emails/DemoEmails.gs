@@ -17,7 +17,8 @@
  * receives over SMTP. Inserted samples carry a simulated header instead.
  *
  * Usage: open this project in the Apps Script editor, select
- * insertDemoEmails, click Run.
+ * insertDemoEmails (all samples) or insertAttachmentDemoEmail (only the
+ * attachment sample), click Run.
  */
 
 const SAMPLES = [
@@ -68,6 +69,20 @@ const SAMPLES = [
     body: 'I am in a meeting and cannot talk. Please wire 48,000 USD to our new supplier today and keep this confidential until the deal is announced. I will send the bank details once you confirm.',
   },
   {
+    name: 'Disguised attachment from a fake courier',
+    expected: 'Likely malicious (malware delivery pattern)',
+    from: 'DHL Express <tracking@dhl-parcel-notice.com>',
+    auth: 'spf=softfail smtp.mailfrom=dhl-parcel-notice.com; dkim=none',
+    subject: 'Delivery failed - invoice attached',
+    body: 'We could not deliver your parcel. Open the attached invoice to reschedule delivery.',
+    attachment: {
+      // A harmless one-line page: the NAME is what the scorer judges.
+      filename: 'Invoice_48213.pdf.html',
+      type: 'text/html',
+      content: '<html><body><p>Demo attachment for the Malicious Email Scorer. This file is safe.</p></body></html>',
+    },
+  },
+  {
     name: 'Legitimate verified sender',
     expected: 'Looks safe (verified sender)',
     from: 'Google <no-reply@accounts.google.com>',
@@ -78,11 +93,20 @@ const SAMPLES = [
 ];
 
 function insertDemoEmails() {
-  SAMPLES.forEach(function (sample) {
-    Gmail.Users.Messages.insert({ raw: buildRawMessage(sample), labelIds: ['INBOX', 'UNREAD'] }, 'me');
-    console.log('Inserted: ' + sample.name + '  ->  expected: ' + sample.expected);
-  });
+  SAMPLES.forEach(insertSample);
   console.log('Done. Search Gmail for subject:[Demo] to find (or delete) the samples.');
+}
+
+/** Inserts only the attachment sample (for inboxes that already have the others). */
+function insertAttachmentDemoEmail() {
+  SAMPLES.filter(function (sample) {
+    return sample.attachment;
+  }).forEach(insertSample);
+}
+
+function insertSample(sample) {
+  Gmail.Users.Messages.insert({ raw: buildRawMessage(sample), labelIds: ['INBOX', 'UNREAD'] }, 'me');
+  console.log('Inserted: ' + sample.name + '  ->  expected: ' + sample.expected);
 }
 
 /** Builds an RFC 822 message: headers + plain-text and HTML parts. */
@@ -102,13 +126,29 @@ function buildRawMessage(sample) {
     'Date: ' + new Date().toUTCString(),
     'Message-ID: <' + boundary + '@demo.invalid>',
     'MIME-Version: 1.0',
-    'Content-Type: multipart/alternative; boundary="' + boundary + '"',
+    'Content-Type: ' + (sample.attachment ? 'multipart/mixed' : 'multipart/alternative') +
+      '; boundary="' + boundary + '"',
   ].filter(Boolean);
 
-  const raw = headers.join('\r\n') + '\r\n\r\n' +
-    part(boundary, 'text/plain', sample.body + (sample.link ? '\n\n' + sample.link.href : '')) +
-    part(boundary, 'text/html', html) +
-    '--' + boundary + '--\r\n';
+  const text = sample.body + (sample.link ? '\n\n' + sample.link.href : '');
+  let body;
+  if (sample.attachment) {
+    // multipart/mixed: the message text (plain + html), then the attachment.
+    const inner = 'alt-' + boundary;
+    body =
+      '--' + boundary + '\r\n' +
+      'Content-Type: multipart/alternative; boundary="' + inner + '"\r\n\r\n' +
+      part(inner, 'text/plain', text) + part(inner, 'text/html', html) + '--' + inner + '--\r\n' +
+      '--' + boundary + '\r\n' +
+      'Content-Type: ' + sample.attachment.type + '; name="' + sample.attachment.filename + '"\r\n' +
+      'Content-Disposition: attachment; filename="' + sample.attachment.filename + '"\r\n' +
+      'Content-Transfer-Encoding: base64\r\n\r\n' +
+      Utilities.base64Encode(sample.attachment.content, Utilities.Charset.UTF_8) + '\r\n';
+  } else {
+    body = part(boundary, 'text/plain', text) + part(boundary, 'text/html', html);
+  }
+
+  const raw = headers.join('\r\n') + '\r\n\r\n' + body + '--' + boundary + '--\r\n';
 
   return Utilities.base64EncodeWebSafe(Utilities.newBlob(raw).getBytes());
 }

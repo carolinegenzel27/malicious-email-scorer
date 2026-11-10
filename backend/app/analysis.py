@@ -2,6 +2,7 @@
 
 import logging
 
+from app.analyzers.attachments import analyze_attachments
 from app.analyzers.authentication import analyze_authentication
 from app.analyzers.base import Analyzer, finding
 from app.analyzers.content import analyze_content
@@ -20,6 +21,7 @@ ANALYZERS: tuple[Analyzer, ...] = (
     analyze_domain_age,
     analyze_links,
     analyze_content,
+    analyze_attachments,
 )
 
 

@@ -24,7 +24,7 @@ def valid_email(**overrides) -> dict:
 
 
 def test_health_is_public(client):
-    assert client.get("/health").json() == {"status": "ok"}
+    assert client.get("/health").json() == {"status": "ok", "version": "dev"}
 
 
 def test_analyze_with_valid_key(client):
@@ -54,10 +54,30 @@ def test_rejects_unknown_fields(client):
     assert response.status_code == 422
 
 
-@pytest.mark.parametrize("field", [{"attachments": []}, {"return_path": "x@y.com"}])
+@pytest.mark.parametrize(
+    "field",
+    [
+        {"return_path": "x@y.com"},
+        # Attachment names and types are accepted - contents or hashes are not.
+        {"attachments": [{"filename": "a.pdf", "sha256": "0" * 64}]},
+        {"attachments": [{"filename": "a.pdf", "data": "JVBERi0x"}]},
+    ],
+)
 def test_unused_fields_are_not_accepted(client, field):
     # Data minimization: the API refuses data it would not use.
     response = client.post("/analyze", json=valid_email(**field), headers={"X-API-Key": TEST_KEY})
+    assert response.status_code == 422
+
+
+def test_attachment_names_are_accepted(client):
+    email = valid_email(attachments=[{"filename": "report.pdf", "content_type": "application/pdf"}])
+    response = client.post("/analyze", json=email, headers={"X-API-Key": TEST_KEY})
+    assert response.status_code == 200
+
+
+def test_attachment_count_is_bounded(client):
+    email = valid_email(attachments=[{"filename": f"f{i}.txt"} for i in range(31)])
+    response = client.post("/analyze", json=email, headers={"X-API-Key": TEST_KEY})
     assert response.status_code == 422
 
 

@@ -43,6 +43,16 @@ SUSPICIOUS_LINK = _any(
     "links.text_mismatch", "links.lookalike_domain", "links.brand_in_domain",
     "links.ip_address", "links.punycode_domain", "links.shortener",
 )
+DANGEROUS_ATTACHMENT = _any(
+    "attachments.reversed_name", "attachments.double_extension", "attachments.executable",
+    "attachments.macro_document", "attachments.html",
+)
+# The sender itself does not hold up (used to tell malware from a colleague's file).
+SUSPICIOUS_SENDER = _any(
+    "sender.brand_impersonation", "sender.lookalike_domain", "sender.brand_in_domain",
+    "sender.punycode_domain", "sender.name_contains_other_address", "sender.new_domain",
+    "sender.reply_to_mismatch", "auth.dmarc_fail",
+)
 # The reply would not reach who the user thinks wrote it.
 DIVERTED_IDENTITY = _any(
     "sender.reply_to_mismatch", "sender.free_email",
@@ -65,6 +75,13 @@ PATTERNS: tuple[Pattern, ...] = (
         requires=(_any("content.credential_request"), SUSPICIOUS_LINK),
         explanation="The email asks you to verify your account or enter login details, and "
                     "its link leads to a disguised site. This is how passwords are stolen.",
+    ),
+    Pattern(
+        id="pattern.malware_delivery",
+        name="Malware delivery",
+        requires=(DANGEROUS_ATTACHMENT, SUSPICIOUS_SENDER),
+        explanation="A risky or disguised attachment from a sender that does not hold up. "
+                    "This is how malware is delivered by email.",
     ),
     Pattern(
         id="pattern.ceo_fraud",

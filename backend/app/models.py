@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 MAX_HEADER_LEN = 4_000
 MAX_SUBJECT_LEN = 1_000
 MAX_BODY_LEN = 200_000
+MAX_ATTACHMENTS = 30
 
 
 class _StrictModel(BaseModel):
@@ -24,6 +25,14 @@ class _StrictModel(BaseModel):
 
 
 # ---------- Request ----------
+
+
+class Attachment(_StrictModel):
+    """Only the file's NAME and declared TYPE. Contents, sizes and hashes never
+    leave Gmail: the name alone reveals the tricks this checks for."""
+
+    filename: str = Field(max_length=255)
+    content_type: str = Field(default="", max_length=100)
 
 
 class EmailAnalysisRequest(_StrictModel):
@@ -37,6 +46,7 @@ class EmailAnalysisRequest(_StrictModel):
     )
     body_text: str = Field(default="", max_length=MAX_BODY_LEN)
     body_html: str = Field(default="", max_length=MAX_BODY_LEN)
+    attachments: list[Attachment] = Field(default_factory=list, max_length=MAX_ATTACHMENTS)
 
 
 # ---------- Response ----------
@@ -60,7 +70,9 @@ class Finding(BaseModel):
     """One explainable reason that contributed to the score."""
 
     id: str = Field(description="Stable machine id, e.g. 'auth.dmarc_fail'")
-    category: str = Field(description="authentication | sender | links | content | attack pattern")
+    category: str = Field(
+        description="authentication | sender | links | content | attachments | attack pattern"
+    )
     severity: Severity
     title: str = Field(description="Short, plain-language headline for the user")
     detail: str = Field(description="Evidence: what exactly we saw")

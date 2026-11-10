@@ -29,6 +29,8 @@ const PATTERN_ADVICE = {
     "Don't click the link or enter any details. If you're worried about your account, go to the site directly.",
   'pattern.brand_spoofing_new_domain':
     "This isn't really from the brand it names. Don't click links or open attachments.",
+  'pattern.malware_delivery':
+    "Don't open the attachment. If you were expecting a file from this sender, confirm with them another way first.",
   'pattern.attacker_owned_lookalike':
     "This isn't really from the brand it imitates. Don't click links or open attachments.",
 };
@@ -52,6 +54,7 @@ const FINDING_ICONS = {
   pattern: 'report',
   sender: 'person',
   links: 'link',
+  attachments: 'attach_file',
   auth: 'security',
 };
 
