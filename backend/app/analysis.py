@@ -1,15 +1,45 @@
-"""Analysis pipeline: runs the analyzers and turns findings into a verdict.
+"""Analysis pipeline: runs every analyzer, then scores the combined findings."""
 
-Placeholder for now - analyzers are added in the next steps.
-"""
+import logging
 
-from app.models import AnalysisResult, EmailAnalysisRequest, Verdict
+from app.analyzers.authentication import analyze_authentication
+from app.analyzers.base import Analyzer, finding
+from app.analyzers.sender import analyze_sender
+from app.models import AnalysisResult, EmailAnalysisRequest, Finding, Severity
+from app.scoring import score_findings
+
+logger = logging.getLogger(__name__)
+
+ANALYZERS: tuple[Analyzer, ...] = (
+    analyze_authentication,
+    analyze_sender,
+)
 
 
 def analyze(email: EmailAnalysisRequest) -> AnalysisResult:
-    return AnalysisResult(
-        score=0,
-        verdict=Verdict.SAFE,
-        summary="Backend connected. No analyzers enabled yet.",
-        findings=[],
-    )
+    findings: list[Finding] = []
+    for analyzer in ANALYZERS:
+        findings += _run_safely(analyzer, email)
+    return score_findings(findings)
+
+
+def _run_safely(analyzer: Analyzer, email: EmailAnalysisRequest) -> list[Finding]:
+    """One buggy analyzer must not take down the whole analysis.
+
+    Crafted input that triggers an exception in one check still gets scored
+    by all the others, and the user is told a check was skipped.
+    """
+    try:
+        return analyzer(email)
+    except Exception:
+        # Log the stack trace only - never the email content.
+        logger.exception("Analyzer %s failed", analyzer.__name__)
+        return [
+            finding(
+                f"internal.{analyzer.__name__}_failed",
+                "internal",
+                Severity.INFO,
+                "One check could not be completed",
+                "Part of the analysis failed, so this result may be incomplete.",
+            )
+        ]
