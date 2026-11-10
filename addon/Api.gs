@@ -109,6 +109,8 @@ function validateResult(text) {
     summary: String(data.summary || ''),
     findings: data.findings.slice(0, 30).map(function (f) {
       return {
+        // Used only as a lookup key (icons, advice), never displayed.
+        id: String(f.id || '').substring(0, 100),
         severity: SEVERITIES.indexOf(f.severity) !== -1 ? f.severity : 'info',
         category: String(f.category || ''),
         title: String(f.title || ''),
