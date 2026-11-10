@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Secrets - never commit
+.env
+*.key
+.clasprc.json
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
+node_modules/

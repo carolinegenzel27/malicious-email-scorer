@@ -1,0 +1,14 @@
+{
+  "name": "malicious-email-scorer",
+  "version": "0.1.0",
+  "description": "Gmail add-on that scores how malicious an opened email is and explains why",
+  "private": true,
+  "scripts": {
+    "addon:push": "clasp push",
+    "addon:open": "clasp open-script"
+  },
+  "author": "Caroline Genzel",
+  "devDependencies": {
+    "@google/clasp": "^3.4.1"
+  }
+}
