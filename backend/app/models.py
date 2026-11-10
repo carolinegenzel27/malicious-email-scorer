@@ -73,7 +73,11 @@ class Finding(BaseModel):
     severity: Severity
     title: str = Field(description="Short, plain-language headline for the user")
     detail: str = Field(description="Evidence: what exactly we saw")
-    points: int = Field(ge=0, description="Contribution to the 0-100 score")
+    points: int = Field(
+        ge=-100,
+        le=100,
+        description="Contribution to the 0-100 score (negative = reassuring evidence)",
+    )
 
 
 class AnalysisResult(BaseModel):

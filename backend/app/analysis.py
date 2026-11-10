@@ -7,6 +7,7 @@ from app.analyzers.base import Analyzer, finding
 from app.analyzers.domain_age import analyze_domain_age
 from app.analyzers.sender import analyze_sender
 from app.models import AnalysisResult, EmailAnalysisRequest, Finding, Severity
+from app.patterns import detect_patterns
 from app.scoring import score_findings
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,8 @@ def analyze(email: EmailAnalysisRequest) -> AnalysisResult:
     findings: list[Finding] = []
     for analyzer in ANALYZERS:
         findings += _run_safely(analyzer, email)
+    # Second pass: look at the findings together for known attack combinations.
+    findings += detect_patterns(findings)
     return score_findings(findings)
 
 

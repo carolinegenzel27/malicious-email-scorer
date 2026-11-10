@@ -22,12 +22,21 @@ SEVERITY_POINTS = {
 }
 
 
-def finding(id: str, category: str, severity: Severity, title: str, detail: str) -> Finding:
+def finding(
+    id: str,
+    category: str,
+    severity: Severity,
+    title: str,
+    detail: str,
+    points: int | None = None,
+) -> Finding:
+    """Build a finding. Points default to the severity's weight; only the
+    pattern engine overrides them (bonus or reassuring deduction)."""
     return Finding(
         id=id,
         category=category,
         severity=severity,
         title=title,
         detail=detail,
-        points=SEVERITY_POINTS[severity],
+        points=SEVERITY_POINTS[severity] if points is None else points,
     )

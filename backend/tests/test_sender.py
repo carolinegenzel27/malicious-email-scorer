@@ -21,7 +21,12 @@ def ids(sender: str, reply_to: str = "") -> set[str]:
     ],
 )
 def test_legitimate_senders_are_clean(sender):
-    assert ids(sender) == set()
+    warnings = [f for f in analyze_sender(EmailAnalysisRequest(sender=sender)) if f.points > 0]
+    assert warnings == []
+
+
+def test_real_brand_domain_is_recognized():
+    assert ids("PayPal <service@paypal.com>") == {"sender.brand_domain_match"}
 
 
 def test_brand_display_name_from_wrong_domain():

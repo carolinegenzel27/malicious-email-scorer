@@ -47,18 +47,30 @@ def _display_name_brand(sender: Address) -> list[Finding]:
     """'PayPal Support' <alerts@random-site.com>"""
     name = sender.display_name.lower()
     for brand in BRANDS:
-        if _mentions(name, brand) and sender.org_domain not in brand.domains:
+        if not _mentions(name, brand):
+            continue
+        if sender.org_domain in brand.domains:
+            # Not a warning: used by the "verified brand" reassuring pattern.
             return [
                 finding(
-                    "sender.brand_impersonation",
+                    "sender.brand_domain_match",
                     CATEGORY,
-                    Severity.HIGH,
-                    f"Display name claims to be {brand.name}, but the address is not",
-                    f'Shown as "{clip(sender.display_name, 80)}", but sent from '
-                    f"{clip(sender.domain, 80)}. {brand.name} sends from "
-                    f"{', '.join(sorted(brand.domains))}.",
+                    Severity.INFO,
+                    f"Sender address matches {brand.name}'s real domain",
+                    f"{clip(sender.domain, 80)} is a domain {brand.name} really uses.",
                 )
             ]
+        return [
+            finding(
+                "sender.brand_impersonation",
+                CATEGORY,
+                Severity.HIGH,
+                f"Display name claims to be {brand.name}, but the address is not",
+                f'Shown as "{clip(sender.display_name, 80)}", but sent from '
+                f"{clip(sender.domain, 80)}. {brand.name} sends from "
+                f"{', '.join(sorted(brand.domains))}.",
+            )
+        ]
     return []
 
 

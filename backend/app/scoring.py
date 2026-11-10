@@ -13,9 +13,10 @@ MALICIOUS_THRESHOLD = 60  # e.g. two HIGH signals, or HIGH + MEDIUM + LOW
 
 
 def score_findings(findings: list[Finding]) -> AnalysisResult:
-    # Most serious first, so the add-on shows the strongest reasons on top.
-    ordered = sorted(findings, key=lambda f: f.points, reverse=True)
-    score = min(100, sum(f.points for f in ordered))
+    # Named attack patterns first (the "bottom line"), then most serious first.
+    ordered = sorted(findings, key=lambda f: (not _is_attack_pattern(f), -f.points))
+    # Reassuring patterns carry negative points, so clamp at both ends.
+    score = max(0, min(100, sum(f.points for f in ordered)))
 
     if score >= MALICIOUS_THRESHOLD or any(f.severity == Severity.CRITICAL for f in ordered):
         verdict = Verdict.MALICIOUS
@@ -30,6 +31,10 @@ def score_findings(findings: list[Finding]) -> AnalysisResult:
         summary=_summary(verdict, ordered),
         findings=ordered,
     )
+
+
+def _is_attack_pattern(f: Finding) -> bool:
+    return f.category == "attack pattern" and f.severity != Severity.INFO
 
 
 def _summary(verdict: Verdict, ordered: list[Finding]) -> str:
