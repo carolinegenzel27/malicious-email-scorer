@@ -22,7 +22,21 @@ function onHomepage() {
   return buildHomepageCard();
 }
 
+// Must match oauthScopes in appsscript.json.
+const REQUIRED_SCOPES = [
+  'https://www.googleapis.com/auth/gmail.addons.execute',
+  'https://www.googleapis.com/auth/gmail.addons.current.message.readonly',
+  'https://www.googleapis.com/auth/script.external_request',
+];
+
 function analyzeOpenedMessage(e) {
+  // If the user has not granted every scope (e.g. a new scope was added in an
+  // update), this stops execution and lets Gmail show its consent prompt.
+  // Deliberately OUTSIDE the try/catch so our error card cannot swallow it.
+  if (typeof ScriptApp.requireScopes === 'function') {
+    ScriptApp.requireScopes(ScriptApp.AuthMode.FULL, REQUIRED_SCOPES);
+  }
+
   try {
     // The event's access token unlocks THIS message only (least privilege).
     GmailApp.setCurrentMessageAccessToken(e.gmail.accessToken);

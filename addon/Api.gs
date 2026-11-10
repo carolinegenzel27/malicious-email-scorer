@@ -38,13 +38,7 @@ function requestAnalysis(email) {
       muteHttpExceptions: true, // we handle status codes ourselves
     });
   } catch (err) {
-    // Network failure or timeout. Most likely cause: the free-tier server
-    // is waking up from sleep.
-    console.warn('Backend unreachable: ' + err);
-    throw new UserFacingError(
-      'The analysis server is waking up. Please try again in a few seconds.',
-      true
-    );
+    throw classifyFetchError(err);
   }
 
   const code = response.getResponseCode();
@@ -57,6 +51,35 @@ function requestAnalysis(email) {
   }
 
   return validateResult(response.getContentText());
+}
+
+/**
+ * UrlFetchApp throws for very different reasons. Telling them apart matters:
+ * "server is waking up" is only true for timeouts, and a misleading message
+ * sends the user (and us) debugging in the wrong direction.
+ */
+function classifyFetchError(err) {
+  const raw = String((err && err.message) || err);
+  console.warn('Backend fetch failed: ' + raw);
+  // Apps Script error text contains no secrets (no headers or payload), so a
+  // short excerpt is safe to show and makes failures diagnosable.
+  const detail = ' (' + raw.substring(0, 200) + ')';
+
+  if (/permission|authoriz/i.test(raw)) {
+    return new UserFacingError(
+      'The add-on lacks permission to contact the analysis server. Re-open the add-on and approve access.' + detail
+    );
+  }
+  if (/whitelist|allowlist/i.test(raw)) {
+    return new UserFacingError('The add-on is not allowed to call this server URL.' + detail);
+  }
+  if (/timeout|timed out/i.test(raw)) {
+    return new UserFacingError(
+      'The analysis server is waking up. Please try again in a few seconds.',
+      true
+    );
+  }
+  return new UserFacingError('Could not reach the analysis server.' + detail, true);
 }
 
 /**
