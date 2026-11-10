@@ -75,8 +75,7 @@ PATTERNS: tuple[Pattern, ...] = (
             DIVERTED_IDENTITY,
         ),
         explanation="A money request with pressure or secrecy, from an identity that does not "
-                    "hold up (replies go elsewhere, or a free or impersonated address). Verify "
-                    "by phone before paying anything.",
+                    "hold up (replies go elsewhere, or a free or impersonated address).",
     ),
     Pattern(
         id="pattern.attacker_owned_lookalike",
