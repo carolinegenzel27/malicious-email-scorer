@@ -42,7 +42,7 @@ const SAMPLES = [
   },
   {
     name: 'Hebrew bank impersonation',
-    expected: 'Suspicious',
+    expected: 'Likely malicious (sender and link both imitate the bank)',
     from: 'בנק הפועלים <service@poalim-secure-update.com>',
     auth: 'spf=softfail smtp.mailfrom=poalim-secure-update.com; dkim=none',
     subject: 'החשבון שלך הוגבל זמנית',

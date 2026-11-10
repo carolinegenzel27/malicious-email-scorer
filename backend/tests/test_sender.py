@@ -1,7 +1,8 @@
 import pytest
 
-from app.analyzers.sender import _edit_distance, analyze_sender
+from app.analyzers.sender import analyze_sender
 from app.emailparse import org_domain
+from app.lookalike import edit_distance
 from app.models import EmailAnalysisRequest, Severity
 
 
@@ -155,6 +156,6 @@ def test_org_domain_handles_country_suffixes():
     assert org_domain("paypay.ne.jp") == "paypay.ne.jp"
 
 
-def test_edit_distance():
-    assert _edit_distance("paypal", "paypa1") == 1
-    assert _edit_distance("google", "google") == 0
+def testedit_distance():
+    assert edit_distance("paypal", "paypa1") == 1
+    assert edit_distance("google", "google") == 0

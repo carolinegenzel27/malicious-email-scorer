@@ -5,6 +5,7 @@ import logging
 from app.analyzers.authentication import analyze_authentication
 from app.analyzers.base import Analyzer, finding
 from app.analyzers.domain_age import analyze_domain_age
+from app.analyzers.links import analyze_links
 from app.analyzers.sender import analyze_sender
 from app.models import AnalysisResult, EmailAnalysisRequest, Finding, Severity
 from app.patterns import detect_patterns
@@ -16,6 +17,7 @@ ANALYZERS: tuple[Analyzer, ...] = (
     analyze_authentication,
     analyze_sender,
     analyze_domain_age,
+    analyze_links,
 )
 
 
