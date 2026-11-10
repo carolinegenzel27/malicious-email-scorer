@@ -54,6 +54,13 @@ def test_rejects_unknown_fields(client):
     assert response.status_code == 422
 
 
+@pytest.mark.parametrize("field", [{"attachments": []}, {"return_path": "x@y.com"}])
+def test_unused_fields_are_not_accepted(client, field):
+    # Data minimization: the API refuses data it would not use.
+    response = client.post("/analyze", json=valid_email(**field), headers={"X-API-Key": TEST_KEY})
+    assert response.status_code == 422
+
+
 def test_docs_disabled_by_default(client):
     assert client.get("/docs").status_code == 404
     assert client.get("/openapi.json").status_code == 404

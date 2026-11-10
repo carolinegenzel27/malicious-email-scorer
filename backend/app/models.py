@@ -3,6 +3,9 @@
 Everything in `EmailAnalysisRequest` is attacker-controlled (it comes from an
 email), so every field has an explicit size bound. Pydantic rejects oversized
 or malformed input with HTTP 422 before any analysis code runs.
+
+Data minimization: the request holds only fields an analyzer actually uses.
+Unknown fields are rejected, so nothing extra can be sent by mistake.
 """
 
 from enum import Enum
@@ -13,7 +16,6 @@ from pydantic import BaseModel, ConfigDict, Field
 MAX_HEADER_LEN = 4_000
 MAX_SUBJECT_LEN = 1_000
 MAX_BODY_LEN = 200_000
-MAX_ATTACHMENTS = 50
 
 
 class _StrictModel(BaseModel):
@@ -24,19 +26,9 @@ class _StrictModel(BaseModel):
 # ---------- Request ----------
 
 
-class Attachment(_StrictModel):
-    """Attachment METADATA only. File contents are never sent to the backend."""
-
-    filename: str = Field(max_length=500)
-    content_type: str = Field(default="", max_length=200)
-    size_bytes: int = Field(ge=0)
-    sha256: str = Field(default="", pattern=r"^([a-f0-9]{64})?$")
-
-
 class EmailAnalysisRequest(_StrictModel):
     sender: str = Field(max_length=MAX_HEADER_LEN, description="Raw From header")
     reply_to: str = Field(default="", max_length=MAX_HEADER_LEN)
-    return_path: str = Field(default="", max_length=MAX_HEADER_LEN)
     subject: str = Field(default="", max_length=MAX_SUBJECT_LEN)
     authentication_results: list[str] = Field(
         default_factory=list,
@@ -45,7 +37,6 @@ class EmailAnalysisRequest(_StrictModel):
     )
     body_text: str = Field(default="", max_length=MAX_BODY_LEN)
     body_html: str = Field(default="", max_length=MAX_BODY_LEN)
-    attachments: list[Attachment] = Field(default_factory=list, max_length=MAX_ATTACHMENTS)
 
 
 # ---------- Response ----------
@@ -69,7 +60,7 @@ class Finding(BaseModel):
     """One explainable reason that contributed to the score."""
 
     id: str = Field(description="Stable machine id, e.g. 'auth.dmarc_fail'")
-    category: str = Field(description="authentication | sender | links | content | attachments")
+    category: str = Field(description="authentication | sender | links | content | attack pattern")
     severity: Severity
     title: str = Field(description="Short, plain-language headline for the user")
     detail: str = Field(description="Evidence: what exactly we saw")
