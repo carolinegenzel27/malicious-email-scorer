@@ -11,7 +11,18 @@ score, a verdict, and a clear explanation of the reasoning behind it.
 | Path | Contents |
 |---|---|
 | `addon/` | Gmail Add-on (Google Apps Script + CardService) |
-| `backend/` | Analysis backend service (coming soon) |
+| `backend/` | Analysis backend service (Python + FastAPI) |
+
+## Running the backend locally
+
+```bash
+cd backend
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
+.venv/bin/python -m pytest
+export API_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
+.venv/bin/uvicorn app.main:create_app --factory --port 8000
+```
 
 ## Deploying the add-on
 
