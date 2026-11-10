@@ -28,9 +28,17 @@ def warnings(sender: str) -> list[str]:
         "line.me", "love.com", "lime.com", "beta.com", "mega.nz", "metal.com",
         "apply.com", "ample.com", "cloud.com", "officer.com",
         # Brand word inside an unrelated word
-        "pineapple.com", "appleton.com", "officedepot.com", "olivegarden.com", "metadata.io",
-        # Unrelated companies and country domains
-        "paypay.ne.jp", "leumicard.co.il", "example.com",
+        "pineapple.com", "appleton.com", "applebees.com", "officedepot.com", "olivegarden.com",
+        "metadata.io",
+        # Popular senders and services
+        "github.com", "slack.com", "zoom.us", "atlassian.net", "wix.com", "shopify.com", "ebay.com",
+        "aliexpress.com", "booking.com", "airbnb.com", "uber.com", "wolt.com", "spotify.com", "x.com",
+        "medium.com", "substack.com", "mailchimp.com", "sendgrid.net", "hubspot.com", "salesforce.com",
+        "notion.so", "canva.com", "figma.com", "example.com",
+        # Brand-owned secondary domains
+        "googlegroups.com", "netflixtechblog.com", "amazonpay.in",
+        # Israeli and country domains
+        "ynet.co.il", "max.co.il", "isracard.co.il", "leumicard.co.il", "paypay.ne.jp",
     ],
 )
 def test_legitimate_domains_are_not_flagged(domain):
