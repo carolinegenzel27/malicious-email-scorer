@@ -2,7 +2,7 @@
  * UI: turns an analysis result into Gmail add-on cards.
  *
  * Layout, top to bottom: verdict with a risk meter, one plain-language
- * sentence, what to do about it, the reasons, then technical details
+ * sentence, what to do about it, the reasons, then "other things we checked"
  * collapsed. The user should know what to do without reading further than
  * the first two sections.
  *
@@ -76,8 +76,9 @@ function buildResultCard(result) {
       CardService.newCardSection().addWidget(
         CardService.newDecoratedText()
           .setStartIcon(icon('lightbulb'))
-          .setText(colored('<b>What to do</b>', style.color))
-          .setBottomLabel(advice)
+          // The action the user should take: main-size bold text, not a small
+          // grey label, so it is the most noticeable sentence on the card.
+          .setText(colored('<b>What to do</b>', style.color) + '<br><b>' + advice + '</b>')
           .setWrapText(true)
       )
     );
@@ -88,8 +89,9 @@ function buildResultCard(result) {
   if (reasons.length) {
     card.addSection(findingsSection('Why we flagged it', reasons));
   }
+  // Collapsed: neutral context (e.g. DMARC passed, domain age).
   if (details.length) {
-    card.addSection(findingsSection('Technical details', details).setCollapsible(true));
+    card.addSection(findingsSection('Other things we checked', details).setCollapsible(true));
   }
 
   card.addSection(
@@ -108,7 +110,7 @@ function verdictSection(result, style, patterns, warnings) {
       CardService.newDecoratedText()
         .setStartIcon(icon(style.icon))
         .setText(colored('<b>' + style.label + '</b>', style.color))
-        .setBottomLabel('Risk ' + result.score + ' of 100')
+        .setBottomLabel('Risk score: ' + result.score + ' of 100')
     )
     .addWidget(CardService.newTextParagraph().setText(riskMeter(result.score, style.color)));
   const summary = summarize(result, patterns, warnings);
@@ -145,31 +147,38 @@ function adviceFor(verdict, patterns) {
   return VERDICT_ADVICE[verdict] || null;
 }
 
-/** Ten segments, filled in the verdict colour: risk at a glance. */
+/**
+ * One labelled line: "Risk ███████░░░". Solid blocks in the verdict colour
+ * read at a glance; the exact score is shown once, under the verdict.
+ */
 function riskMeter(score, color) {
   let filled = Math.round(score / (100 / METER_SEGMENTS));
   if (score > 0 && filled === 0) {
     filled = 1;
   }
-  const segment = '▰';
+  const block = '\u2588';
+  const gap = '\u2002'; // en space: plain spaces would collapse
   return (
-    colored(segment.repeat(filled), color) +
-    colored(segment.repeat(METER_SEGMENTS - filled), METER_EMPTY_COLOR)
+    '<b>Risk</b>' + gap +
+    colored(block.repeat(filled), color) +
+    colored(block.repeat(METER_SEGMENTS - filled), METER_EMPTY_COLOR)
   );
 }
 
 function findingsSection(header, findings) {
   const section = CardService.newCardSection().setHeader(header);
   findings.forEach(function (f) {
-    section.addWidget(
-      CardService.newDecoratedText()
-        .setStartIcon(icon(iconFor(f)))
-        .setText('<b>' + escapeHtml(f.title) + '</b>')
-        .setBottomLabel(escapeHtml(f.detail))
-        .setWrapText(true)
-    );
+    section.addWidget(findingWidget(f));
   });
   return section;
+}
+
+function findingWidget(f) {
+  return CardService.newDecoratedText()
+    .setStartIcon(icon(iconFor(f)))
+    .setText('<b>' + escapeHtml(f.title) + '</b>')
+    .setBottomLabel(escapeHtml(f.detail))
+    .setWrapText(true);
 }
 
 function iconFor(finding) {
