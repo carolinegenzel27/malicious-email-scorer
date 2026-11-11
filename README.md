@@ -65,7 +65,7 @@ Simple on purpose: **every point traces back to a reason you can read.** One dec
 - 📊 **Weights based on data.** Calibrate the points on a real labeled set of phishing and legitimate emails, instead of setting them by hand.
 - 🤝 **"You've written to this sender before."** Gmail auto-saves people you've written to in *Other contacts*. Checking that list needs a much narrower permission than searching the mailbox (which requires *"read all your email"*), and it's a strong trust signal: an attacker can email you, but can't make you write to them first.
 - 🎣 **QR-code phishing**, where the link hides inside an image.
-- 🔑 **Stronger infrastructure.** Google-signed identity tokens instead of a shared API key, rate limiting, and a paid hosting plan that never sleeps. The free tier sleeps after 15 idle minutes, so for now a [GitHub Action](.github/workflows/keep-alive.yml) pings it every 10.
+- 🔑 **Stronger infrastructure.** Google-signed identity tokens instead of a shared API key, rate limiting, and a paid hosting plan that never sleeps (the free tier sleeps after 15 idle minutes).
 - 👍 **Feedback buttons** ("this is a false positive") to measure and keep improving accuracy.
 
 ## 🚀 Running it
