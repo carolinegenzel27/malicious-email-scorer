@@ -39,6 +39,15 @@ const VERDICT_ADVICE = {
   suspicious: 'Before clicking links or replying, verify with the sender through another channel.',
 };
 
+// Closing note per verdict. Suspicious has none: "What to do" already says it.
+// Safe: guard against false confidence. Malicious: one more useful action
+// (reporting uses Gmail's own menu, so it needs no extra permission).
+const FOOTER_NOTE = {
+  safe: "<i>Looks safe isn't a guarantee. If something feels off, check with the sender another way.</i>",
+  malicious: 'Help protect others: open the \u22EE menu on this email and choose <b>Report phishing</b>.',
+};
+const FOOTER_COLOR = '#5f6368';
+
 // Icon per finding: exact id first, then id prefix.
 const FINDING_ICONS = {
   'content.money_request': 'payment',
@@ -94,13 +103,14 @@ function buildResultCard(result) {
     card.addSection(findingsSection('Other things we checked', details).setCollapsible(true));
   }
 
-  card.addSection(
-    CardService.newCardSection().addWidget(
-      CardService.newTextParagraph().setText(
-        '<font color="#5f6368"><i>Automated assessment. If in doubt, verify with the sender through another channel.</i></font>'
+  const footer = FOOTER_NOTE[result.verdict];
+  if (footer) {
+    card.addSection(
+      CardService.newCardSection().addWidget(
+        CardService.newTextParagraph().setText(colored(footer, FOOTER_COLOR))
       )
-    )
-  );
+    );
+  }
   return card.build();
 }
 

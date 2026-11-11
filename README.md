@@ -5,7 +5,7 @@ A Gmail Add-on that looks at the email you have open and tells you, in plain wor
 <table>
   <tr>
     <td align="center"><img src="docs/screenshots/ceo-fraud-malicious.png" width="250" alt="CEO fraud email scored 71, likely malicious"><br><sub>CEO fraud: no links, passes authentication</sub></td>
-    <td align="center"><img src="docs/screenshots/brand-on-free-email-suspicious.png" width="250" alt="Microsoft display name on a free Outlook account, suspicious"><br><sub>"Microsoft" on a free Outlook account</sub></td>
+    <td align="center"><img src="docs/screenshots/lookalike-domain-suspicious.png" width="250" alt="Look-alike PayPal domain that passes authentication, suspicious"><br><sub>Look-alike domain that passes authentication</sub></td>
     <td align="center"><img src="docs/screenshots/verified-sender-safe.png" width="250" alt="Verified Google email, looks safe"><br><sub>A genuine, verified sender</sub></td>
   </tr>
 </table>
